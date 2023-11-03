@@ -81,13 +81,9 @@ def equalize_hist(image_gray, accumulated_hist):
     """
 
     image_gray = image_gray[:,:,0]
-    
-    # Skalieren Sie die Werte auf den Bereich 0-255 und konvertieren Sie in Ganzzahlen
-    #image_gray_scaled = (image_gray * 255).astype(int)
 
     #flat_image = image_gray.flatten()
     flat_image_scaled = (image_gray * 255).astype(int)
-    print(flat_image_scaled)
 
     # Normalize the accumulated histogram
     normalized_accumulated_hist = (accumulated_hist / accumulated_hist[-1])
@@ -97,14 +93,9 @@ def equalize_hist(image_gray, accumulated_hist):
 
     # Reshape the flat array back to the original image shape
     equalized_image = equalized_image_flat.reshape(image_gray.shape)
-    print(equalized_image)
 
     # Return the equalized image with the same shape as the input image
     return equalized_image[:,:,np.newaxis]
-
-    
-    # Normalize the accumulated histogram
-    #normalized_accumulated_hist = ((accumulated_hist / accumulated_hist[-1]) * 255).astype(int)
 
     #return image_gray # TODO: Exercise 2c
 # Your solution ends here
