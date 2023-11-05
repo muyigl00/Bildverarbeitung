@@ -15,7 +15,14 @@ def get_hist(image_gray):
         An array of the shape (256,).
         The i-th histogram entry corresponds to the number of image pixels with luminance i.
     """
-    return np.array([0. for luminance in range(256)]) # TODO: Exercise 2a
+    # Skalieren Sie die Werte auf den Bereich 0-255 und konvertieren Sie in Ganzzahlen
+    image_gray_scaled = np.round((image_gray * 255)).astype('int64')
+    # Initialisieren Sie das Histogramm
+    histogram = np.zeros(256).astype('int64')
+    # Berechnen Sie das Histogramm
+    for value in range(256):
+        histogram[value] = np.sum(image_gray_scaled == value)
+    return histogram # TODO: Exercise 2a
 
 def max_contrast(image_gray):
     """Rescales an images luminance to maximize its contrast.
@@ -26,7 +33,19 @@ def max_contrast(image_gray):
     Returns:
         An array of the shape (h, w, 1) representing the maximal contrastive version of image_gray.
     """
-    return image_gray # TODO: Exercise 2b
+    image_gray = image_gray[:,:,0]
+    
+    # Finden Sie die minimalen und maximalen Intensitätswerte im Bild
+    min_val = np.min(image_gray)
+    max_val = np.max(image_gray)
+
+    # Berechnen Sie das kontrastgestreckte Bild
+    image_max_contrast = (image_gray - min_val) / (max_val - min_val)
+
+    # Fügen Sie die dritte Dimension wieder hinzu
+    image_gray = image_max_contrast[:,:,np.newaxis]
+
+    return image_gray
 
 def accumulate_hist(hist):
     """Accumulates and normalizes a given histogram.
