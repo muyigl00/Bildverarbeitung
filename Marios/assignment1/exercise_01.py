@@ -15,13 +15,16 @@ def rgb_split(image_rgb):
         Each array represents an image where only one color channel of the original image is preserved.
         The order of the preserved channels is red, green, blue.
     """
+    # initielaisere bild für rotern grünnen und blauen kanal
     red_img,green_img,blue_img = np.zeros(image_rgb.shape),np.zeros(image_rgb.shape),np.zeros(image_rgb.shape)
+
+    # sfüge kanaläe in leere Bilder rein
     red_img[:,:,0]=image_rgb[:,:,0]
     green_img[:,:,1]=image_rgb[:,:,1]
     blue_img[:,:,2]=image_rgb[:,:,2]
    
 
-    return [red_img,green_img,blue_img] # TODO: Exercise 1a
+    return [red_img,green_img,blue_img]
 
 def gamma_correction(image_rgb, gamma=2.2):
     """Performs gamma correction on a given image.
@@ -33,7 +36,8 @@ def gamma_correction(image_rgb, gamma=2.2):
     Returns:
         An array of the shape (h, w, 3) representing the gamma-corrected image.
     """
-    return image_rgb**gamma # TODO: Exercise 1b
+
+    return image_rgb**gamma
 
 def rgb_to_gray(image_rgb):
     """Transforms an image into grayscale using reasonable weighting factors.
@@ -47,9 +51,14 @@ def rgb_to_gray(image_rgb):
     
     # Use weighting factors presented in Lecture "bv-01-Sehen-Farbe.pdf", Slide 45
     weights = np.array([.299, .587, .114])
+
+    # erstelle leeres array der shape (h,w,1)
     image_gray = np.zeros((image_rgb.shape[0],image_rgb.shape[1],1))
+
+    # rechne für jedes pixel lumininez aus und füge resultierends (h,w) array in finales Bild hinzu
     image_gray[:,:,0] = np.array([np.dot(image_rgb,weights)])
-    return image_gray # TODO: Exercise 1c
+
+    return image_gray
 # Your solution ends here
 
 def main():
