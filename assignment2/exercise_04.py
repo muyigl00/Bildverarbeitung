@@ -15,12 +15,37 @@ def mean_filter(image, w):
         Note that the input image is zero-padded to preserve the original resolution.
     """
     height, width, chs = image.shape
-    
     # Pad the image corners with zeros to preserve the original resolution.
     image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
-    result = np.zeros_like(image)
-    # TODO: Exercise 4a)
-    return result
+    denoised = np.zeros_like(image)
+    for i in range(height):
+        for j in range(width):
+            box = image_padded[i:i+2*w+1,j:j+2*w+1,:]
+            new_pixl=np.mean(box,axis=(0,1))
+            denoised[i,j,:]=new_pixl
+    return denoised
+
+def vectorized_mean_filter(image, w):
+    """Applies mean filtering to the input image using vectorized operations.
+
+    Args:
+        image: A numpy array with shape (height, width, channels) representing the input image.
+        w: Defines the patch size 2*w+1 of the filter.
+
+    Returns:
+        A numpy array with shape (height, width, channels) representing the filtered image.
+        Note that the input image is zero-padded to preserve the original resolution.
+    """
+    # Pad the image corners with zeros to preserve the original resolution.
+    image_padded = np.pad(image, pad_width=((w, w), (w, w), (0, 0)), mode='constant', constant_values=0)
+
+    # Create a 2D filter of ones
+    mean_filter = np.ones((2*w+1, 2*w+1, 1), dtype=np.float32) / ((2*w+1) ** 2)
+
+    # Apply the filter using convolution
+    denoised = np.sum(image_padded * mean_filter, axis=(0, 1))
+
+    return denoised
             
 def median_filter(image, w):
     """Applies median filtering to the input image.
@@ -37,9 +62,13 @@ def median_filter(image, w):
     
     # Pad the image corners with zeros to preserve the original resolution.
     image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
-    result = np.zeros_like(image)
-    # TODO: Exercise 4b)
-    return result
+    denoised = np.zeros_like(image)
+    for i in range(height):
+        for j in range(width):
+            box = image_padded[i:i+2*w+1,j:j+2*w+1,:]
+            new_pixl=np.median(box,axis=(0,1))
+            denoised[i,j,:]=new_pixl
+    return denoised
     
 def get_gauss_kern_2d(w, sigma):
     """Returns a two-dimensional gauss kernel.
@@ -91,7 +120,7 @@ def main(show_cup=True, show_peppers=False):
         show_image(image_peppers, title='Original Peppers')
     
     # mean filter
-    image_cup_mean_filtered = mean_filter(image_cup_noisy, w=2)
+    image_cup_mean_filtered = vectorized_mean_filter(image_cup_noisy, w=2)
     image_peppers_mean_filtered = mean_filter(image_peppers, w=2)
     if show_cup:
         show_image(image_cup_mean_filtered, title='Mean-Filtered Cup')
