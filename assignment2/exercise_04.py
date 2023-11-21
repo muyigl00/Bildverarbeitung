@@ -14,38 +14,37 @@ def mean_filter(image, w):
         A numpy array with shape (height, width, channels) representing the filtered image.
         Note that the input image is zero-padded to preserve the original resolution.
     """
+
     height, width, chs = image.shape
-    # Pad the image corners with zeros to preserve the original resolution.
-    image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
     denoised = np.zeros_like(image)
+    # This Filter is seperable, attempt to save time by using 2 1-dimensional filters
+    # reducing the Complexitiy from O(H*W*w^2) to O(H*W*(w+w))
+    # since Python for loops are quite slow the effects of this change remain questionable in practice
+
+
+    # "Hight filter"
+    # Pad the image height with zeros to preserve the original resolution.
+    image_padded = np.pad(image, pad_width=((w,w), (0,0), (0,0)))
     for i in range(height):
         for j in range(width):
-            box = image_padded[i:i+2*w+1,j:j+2*w+1,:]
-            new_pixl=np.mean(box,axis=(0,1))
+            boxH = image_padded[i:i+2*w+1,j,:]
+            new_pixl=np.mean(boxH,axis=0)
             denoised[i,j,:]=new_pixl
-    return denoised
-
-def vectorized_mean_filter(image, w):
-    """Applies mean filtering to the input image using vectorized operations.
-
-    Args:
-        image: A numpy array with shape (height, width, channels) representing the input image.
-        w: Defines the patch size 2*w+1 of the filter.
-
-    Returns:
-        A numpy array with shape (height, width, channels) representing the filtered image.
-        Note that the input image is zero-padded to preserve the original resolution.
-    """
-    # Pad the image corners with zeros to preserve the original resolution.
-    image_padded = np.pad(image, pad_width=((w, w), (w, w), (0, 0)), mode='constant', constant_values=0)
-
-    # Create a 2D filter of ones
-    mean_filter = np.ones((2*w+1, 2*w+1, 1), dtype=np.float32) / ((2*w+1) ** 2)
-
-    # Apply the filter using convolution
-    denoised = np.sum(image_padded * mean_filter, axis=(0, 1))
+    
+    # "width filter"
+    # pad the image width with zeros to presserve the original resolution
+    image_padded_2 = np.pad(denoised, pad_width=((0,0), (w,w), (0,0)))
+    for i in range(height):
+        for j in range(width):
+            boxW = image_padded_2[i,j:j+2*w+1,:]
+            
+            new_pixl=np.mean(boxW,axis=0)
+            denoised[i,j,:]=new_pixl   
 
     return denoised
+
+
+
             
 def median_filter(image, w):
     """Applies median filtering to the input image.
@@ -59,10 +58,12 @@ def median_filter(image, w):
         Note that the input image is zer-padded to preserve the original resolution.
     """
     height, width, chs = image.shape
+    denoised = np.zeros_like(image)
     
+    # this filter is non-seperable, the median will be different after the application of the first filter
+
     # Pad the image corners with zeros to preserve the original resolution.
     image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
-    denoised = np.zeros_like(image)
     for i in range(height):
         for j in range(width):
             box = image_padded[i:i+2*w+1,j:j+2*w+1,:]
@@ -107,7 +108,7 @@ def gauss_filter(image, w, sigma):
     return result
 # Your solution ends here.
 
-def main(show_cup=True, show_peppers=False):
+def main(show_cup=True, show_peppers=True):
     """You may vary the parameters w and sigma to explore the effect on the resulting filtered images.
     
     Note: The test-cases will only pass with w=2 and sigma=1.5.
@@ -120,7 +121,7 @@ def main(show_cup=True, show_peppers=False):
         show_image(image_peppers, title='Original Peppers')
     
     # mean filter
-    image_cup_mean_filtered = vectorized_mean_filter(image_cup_noisy, w=2)
+    image_cup_mean_filtered = mean_filter(image_cup_noisy, w=2)
     image_peppers_mean_filtered = mean_filter(image_peppers, w=2)
     if show_cup:
         show_image(image_cup_mean_filtered, title='Mean-Filtered Cup')
@@ -147,6 +148,7 @@ def main(show_cup=True, show_peppers=False):
         show_image(image_peppers_gauss_filtered, title='Gauss-Filtered Peppers')
     
     assets = np.load('.assets.npz')
+    print(assets['gauss_kern'])
     check_arrays(
         'Exercise 4',
         [
