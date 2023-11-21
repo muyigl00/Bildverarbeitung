@@ -40,8 +40,6 @@ def main():
         [image_cup_n_filtered, image_tree_n_filtered],
         [assets['image_cup_n_filtered'], assets['image_tree_n_filtered']],
     )
-    # print(assets['image_cup_n_filtered'])
-    # print(image_cup_n_filtered)
 
     input('Press ENTER to quit.')
     

@@ -22,8 +22,22 @@ def bilateral_filter(image, w, sigma_d, sigma_r):
     # Pad the image corners with zeros to preserve the original resolution.
     image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
     result = np.zeros_like(image)
-    gauss_kern_d = get_gauss_kern_2d(w, sigma_d)[:,:,None] # TODO: Solve Exercise 4c) first!
-    # TODO: Exercise 5) Hint: You may use gauss_function implemented in utils.py which is already imported.
+    gauss_kern_d = get_gauss_kern_2d(w, sigma_d)[:,:,None]
+    for i in range(height):
+        for j in range(width):
+            
+            box = image_padded[i:i+2*w+1,j:j+2*w+1,:]
+
+            # calculate the ranged kern
+            gauss_kern_r = gauss_function(box,box[w,w,:],sigma_r)[:,:,None]
+
+            # calculate and normalise the bileteral kern
+            bilateral_kern = gauss_kern_d*gauss_kern_r
+            bilateral_kern=bilateral_kern/bilateral_kern.sum()
+
+            new_pixl = np.sum(box*bilateral_kern,axis=(0,1))
+            result[i,j,:]=new_pixl
+    
     return result
 # Your solution ends here.
 
@@ -34,6 +48,7 @@ def main(show_cup=True, show_peppers=True):
     """
     image_cup_noisy = load_image(osp.join('images', 'cup_noisy.png'))
     image_peppers = load_image(osp.join('images', 'peppers.png'))
+
     if show_cup:
         show_image(image_cup_noisy, title='Original Cup')
     if show_peppers:

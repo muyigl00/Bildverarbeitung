@@ -19,7 +19,6 @@ def mean_filter(image, w):
     denoised = np.zeros_like(image)
     # This Filter is seperable, attempt to save time by using 2 1-dimensional filters
     # reducing the Complexitiy from O(H*W*w^2) to O(H*W*(w+w))
-    # since Python for loops are quite slow the effects of this change remain questionable in practice
 
 
     # "Hight filter"
@@ -30,15 +29,16 @@ def mean_filter(image, w):
             boxH = image_padded[i:i+2*w+1,j,:]
             new_pixl=np.mean(boxH,axis=0)
             denoised[i,j,:]=new_pixl
+
     # "width filter"
     # pad the image width with zeros to presserve the original resolution
     image_padded_2 = np.pad(denoised, pad_width=((0,0), (w,w), (0,0)))
     for i in range(height):
         for j in range(width):
             boxW = image_padded_2[i,j:j+2*w+1,:]
-            
             new_pixl=np.mean(boxW,axis=0)
-            denoised[i,j,:]=new_pixl   
+            denoised[i,j,:]=new_pixl  
+
     return denoised
 
 
@@ -58,7 +58,7 @@ def median_filter(image, w):
     height, width, chs = image.shape
     denoised = np.zeros_like(image)
     
-    # this filter is non-seperable, the median will be different after the application of the first filter
+    # this filter is non-seperable since it uses non-linear operations
 
     # Pad the image corners with zeros to preserve the original resolution.
     image_padded = np.pad(image, pad_width=((w,w), (w,w), (0,0)))
@@ -107,14 +107,13 @@ def gauss_filter(image, w, sigma):
     height,width,chs = image.shape
     denoised = np.zeros_like(image)
 
-    # get 1d Filter use the property that the entry at [w,w] is alway = 1 when not normalised
-    gauss_unnorm = get_gauss_kern_2d(w,sigma)/get_gauss_kern_2d(w,sigma)[w,w]
-    gauss_kern=gauss_unnorm[w,:]/gauss_unnorm[w,:].sum() 
-    gauss_kern=gauss_kern[:,None]
+    # get 1d-Kern from gaussKern and normalise it
+    gauss_kern = get_gauss_kern_2d(w,sigma)[:,:,None]
+    gauss_kern=gauss_kern[w,:,:]/gauss_kern[w,:,:].sum() 
 
     # Use seperability
 
-    # pad image
+    # pad image height and then use 1d-gauss-filter vertically
     image_paddedH = np.pad(image, pad_width=((w,w), (0,0), (0,0)))
     for i in range(height):
         for j in range(width):
@@ -122,7 +121,7 @@ def gauss_filter(image, w, sigma):
             new_pixl = np.sum(boxH*gauss_kern,axis=0)
             denoised[i,j,:] = new_pixl
 
-    # second iteration 
+    # pad the image width and then use 1d-gauss-filter horizontally
     image_paddedW = np.pad(denoised, pad_width=((0,0), (w,w), (0,0)))
     for i in range(height):
         for j in range(width):
