@@ -1,3 +1,4 @@
+from cmath import exp, pi
 import numpy as np
 from utils import plot_time_and_freq, check_arrays
 
@@ -11,9 +12,13 @@ def dft_1d(y_time):
     Returns:
         A numpy array with shape (n,) representing the signal in frequency domain.
     """
-    n, = y_time.shape
     
-    y_freq = np.zeros_like(y_time) # TODO: Exercise 6a)
+    n, = y_time.shape
+    # discrete Ft utilises sums multiplied with index specific factors, this can be understood as Matrixmultiplication
+    grid =  np.mgrid[0:n,0:n]
+    FourierM = np.exp((grid[0] * grid[1]) * (-1j * 2 * pi / n))
+    y_freq = np.matmul(FourierM,y_time)
+    
     return y_freq
 
 def idft_1d(y_freq):
@@ -26,8 +31,10 @@ def idft_1d(y_freq):
         A numpy array with shape (n,) representing the signal in time domain.
     """
     n, = y_freq.shape
+    grid = np.mgrid[0:n,0:n]
+    FourierM = np.exp((grid[0] * grid[1]) * (1j * 2 * pi / n)) / n
+    y_time = np.matmul(FourierM,y_freq)
     
-    y_time = np.zeros_like(y_freq) # TODO: Exercise 6b)
     return y_time
 
 def dft_1d_denoise(y_time, threshold=0.25):
@@ -40,9 +47,10 @@ def dft_1d_denoise(y_time, threshold=0.25):
         A numpy array with shape (n,) representing the denoised signal in time domain.
     """
     n, = y_time.shape
+    filter = lambda z:0+0j if abs(z)/n <= threshold else z # sets any value with amplitude lower than threshhold to zero
     y_freq = dft_1d(y_time)
-    # TODO: Exercise 6c)
-    return idft_1d(y_freq)
+    y_freq_denoise = np.array([filter(y) for y in y_freq]) # apply filter to signal in frequency domain
+    return idft_1d(y_freq_denoise)
 
 def box_filter_1d_time(y_time, w):
     """Applies the mean filter of size 2*w+1 to the input signal.
@@ -58,8 +66,9 @@ def box_filter_1d_time(y_time, w):
     # pad signal periodically 
     y_time_padded = np.concatenate((y_time[-w:], y_time, y_time[:w]))
     n, = y_time.shape
-    
-    y_time_filtered = np.zeros_like(y_time) # TODO: Exercise 6d)
+    y_time_filtered = np.zeros_like(y_time)
+    for i in range(n):
+        y_time_filtered[i] = np.mean(y_time_padded[i:i+2*w+1])
     
     return y_time_filtered
 
@@ -74,9 +83,14 @@ def box_filter_1d_freq(y_time, w):
     Returns:
         A numpy array with shape (n,) representing the filtered signal in time domain.
     """
+    n, = y_time.shape 
     y_freq = dft_1d(y_time)
+    y_freq_filtered = np.zeros_like(y_freq)
+    mean_kern = np.ones(2*w+1) / (2*w+1)
+    mean_kern_padded = np.concatenate((mean_kern,np.zeros((n-(2*w+1)))))
+    mean_kern_freq = dft_1d(mean_kern_padded) 
+    y_freq_filtered = y_freq * mean_kern_freq
     
-    y_freq_filtered = np.zeros_like(y_freq) # TODO: Exercise 6d)
     
     return idft_1d(y_freq_filtered)
 # Your solution ends here.
@@ -98,13 +112,14 @@ def main():
     y_freq_denoised = dft_1d(y_time_denoised)
     plot_time_and_freq(t, y_time_denoised, y_freq_denoised, 'Denoised Signal')
     
-    y_filtered1_time = box_filter_1d_time(y_time, w=5)
+    y_filtered1_time = box_filter_1d_time(y_time, w=2)
     y_filtered1_freq = dft_1d(y_filtered1_time)
     plot_time_and_freq(t, y_filtered1_time, y_filtered1_freq, 'Filtered Signal (Time)')
     
-    y_filtered2_time = box_filter_1d_freq(y_time, w=5)
+    y_filtered2_time = box_filter_1d_freq(y_time, w=2)
     y_filtered2_freq = dft_1d(y_filtered2_time)
-    plot_time_and_freq(t, y_filtered2_time, y_filtered2_freq, 'Filtered Signal (Frequency)')
+    plot_time_and_freq(t, y_filtered2_time, y_filtered2_freq , 'Filtered Signal (Frequency)')
+    
     assets = np.load('.assets.npz')
     check_arrays(
         'Exercise 6',
