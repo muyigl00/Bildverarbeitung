@@ -19,9 +19,18 @@ def ideal_low_pass_filter(y_time, max_frequency):
     height, width = y_time.shape
     y_freq = np.fft.fftshift(np.fft.fft2(y_time))
     
-    y_filtered_freq = y_freq # TODO: Exercise 7a)
+    # create 2d array that has euclidean distance of each position from center
+    center = (int(height/2),int(width/2))
+    Y,X = np.ogrid[:height,:width]
+    dist = np.sqrt((X-center[0])**2+(Y-center[1])**2)
     
-    y_filtered_time = np.fft.ifft2(np.fft.ifftshift(y_filtered_freq))
+    # every distance greater then min frequency =1 anything else =0 to get circular mask
+    low_pass = dist <= max_frequency   
+    
+    # apply filter unto sorted frequency of image     
+    y_freq_filtered = y_freq * low_pass
+
+    y_filtered_time = np.fft.ifft2(np.fft.ifftshift(y_freq_filtered))
     return y_filtered_time
     
     
@@ -41,9 +50,19 @@ def ideal_high_pass_filter(y_time, min_frequency):
     height, width = y_time.shape
     y_freq = np.fft.fftshift(np.fft.fft2(y_time))
     
-    y_filtered_freq = y_freq # TODO: Exercise 7b)
+    # create 2d array that has euclidean distance of each position from center
+    center = (int(height/2),int(width/2))
+    Y,X = np.ogrid[:height,:width]
+    dist = np.sqrt((X-center[0])**2+(Y-center[1])**2)
     
-    y_filtered_time = np.fft.ifft2(np.fft.ifftshift(y_filtered_freq))
+    # every distance greater then min frequency =1 anything else =0 to get circular mask
+    low_pass = dist >= min_frequency   
+         
+    # apply filter unto sorted frequency of image    
+    y_freq_filtered = y_freq * low_pass
+    
+    
+    y_filtered_time = np.fft.ifft2(np.fft.ifftshift(y_freq_filtered))
     return y_filtered_time
 # Your solution ends here.
 
