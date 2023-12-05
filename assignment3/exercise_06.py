@@ -65,6 +65,7 @@ def box_filter_1d_time(y_time, w):
     """
     # pad signal periodically 
     y_time_padded = np.concatenate((y_time[-w:], y_time, y_time[:w]))
+    print(y_time_padded.shape)
     n, = y_time.shape
     y_time_filtered = np.zeros_like(y_time)
     for i in range(n):
@@ -85,13 +86,14 @@ def box_filter_1d_freq(y_time, w):
     """
     n, = y_time.shape 
     y_freq = dft_1d(y_time)
-    y_freq_filtered = np.zeros_like(y_freq)
+    # calculate mean filter
     mean_kern = np.ones(2*w+1) / (2*w+1)
-    mean_kern_padded = np.concatenate((mean_kern,np.zeros((n-(2*w+1)))))
+    # pad mean filter to compute multiplication
+    mean_kern_padded = np.concatenate((mean_kern,np.zeros(((n-(2*w+1))))))
+    # put mean filter into frequency domain and apply it
     mean_kern_freq = dft_1d(mean_kern_padded) 
     y_freq_filtered = y_freq * mean_kern_freq
-    
-    
+    # return time-domain version of filtered 
     return idft_1d(y_freq_filtered)
 # Your solution ends here.
 
@@ -112,11 +114,11 @@ def main():
     y_freq_denoised = dft_1d(y_time_denoised)
     plot_time_and_freq(t, y_time_denoised, y_freq_denoised, 'Denoised Signal')
     
-    y_filtered1_time = box_filter_1d_time(y_time, w=2)
+    y_filtered1_time = box_filter_1d_time(y_time, w=5)
     y_filtered1_freq = dft_1d(y_filtered1_time)
     plot_time_and_freq(t, y_filtered1_time, y_filtered1_freq, 'Filtered Signal (Time)')
     
-    y_filtered2_time = box_filter_1d_freq(y_time, w=2)
+    y_filtered2_time = box_filter_1d_freq(y_time, w=5)
     y_filtered2_freq = dft_1d(y_filtered2_time)
     plot_time_and_freq(t, y_filtered2_time, y_filtered2_freq , 'Filtered Signal (Frequency)')
     
