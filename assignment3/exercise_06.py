@@ -65,7 +65,6 @@ def box_filter_1d_time(y_time, w):
     """
     # pad signal periodically 
     y_time_padded = np.concatenate((y_time[-w:], y_time, y_time[:w]))
-    print(y_time_padded.shape)
     n, = y_time.shape
     y_time_filtered = np.zeros_like(y_time)
     for i in range(n):
