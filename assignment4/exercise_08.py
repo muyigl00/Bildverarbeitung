@@ -15,12 +15,19 @@ def gauss_filter_freq(image, w, sigma):
         A numpy array with shape (height, width, channels) representing the filtered image.
     """
     height, width = image.shape[:2]
+
     image_freq = np.fft.fft2(image, axes=(0,1))
+    gauss_kern = get_gauss_kern_2d(w,sigma)
     
-    image_filtered_freq = image_freq # TODO: Exercise 8a)
+    gauss_kern_pad = np.pad(gauss_kern,((0,height-(2*w+1)),(0,width-(2*w+1))))
+
+    gauss_kern_freq = np.fft.fft2(gauss_kern_pad)[:,:,None]
+    image_filtered_freq = np.zeros_like(image_freq)
+
+    image_filtered_freq = image_freq * gauss_kern_freq
     
     image_filtered = np.fft.ifft2(image_filtered_freq, axes=(0,1)) 
-    return image_filtered.real
+    return  np.roll(image_filtered.real,-w,(0,1))
     
 def inverse_gauss_filter_freq(image, w=2, sigma=0.7):
     """Performs sharpening using inverse gauss filtering in the frequency domain.
@@ -66,7 +73,7 @@ def main():
     image_blurred = clip(gauss_filter_freq(image, w=5,sigma=2.2))
     image_sharp_ig = clip(inverse_gauss_filter_freq(image, w=2, sigma=0.7))
     image_sharp_um = clip(unsharp_masking(image, alpha=0.5, w=5,sigma=2.2))
-    
+
     show_multiple_images([image, image_blurred], ['Original', 'Blurred'])
     show_multiple_images([image_sharp_ig, image_sharp_um], ['Inverse Gauss', 'Unsharp Masking'])
     
