@@ -15,17 +15,17 @@ def gauss_filter_freq(image, w, sigma):
         A numpy array with shape (height, width, channels) representing the filtered image.
     """
     height, width = image.shape[:2]
-
     image_freq = np.fft.fft2(image, axes=(0,1))
+
+    # get gauss kernel pad it and convert it into frequency domain
     gauss_kern = get_gauss_kern_2d(w,sigma)
-    
     gauss_kern_pad = np.pad(gauss_kern,((0,height-(2*w+1)),(0,width-(2*w+1))))
-
     gauss_kern_freq = np.fft.fft2(gauss_kern_pad)[:,:,None]
-    image_filtered_freq = np.zeros_like(image_freq)
 
+    # apply kernel in frequency domain
     image_filtered_freq = image_freq * gauss_kern_freq
     
+    # return it back in time domain adjust error resukting from circular convolution
     image_filtered = np.fft.ifft2(image_filtered_freq, axes=(0,1)) 
     return  np.roll(image_filtered.real,-w,(0,1))
     
@@ -43,11 +43,20 @@ def inverse_gauss_filter_freq(image, w=2, sigma=0.7):
     
     height, width = image.shape[:2]
     image_freq = np.fft.fft2(image, axes=(0,1))
+
+    # get gauss kernel pad and convert it into frequency domain
+    gauss_kern = get_gauss_kern_2d(w,sigma)
+    gauss_kern_padded = np.pad(gauss_kern,((0,height-(2*w+1)),(0,width-(2*w+1))))
+    gauss_kern_freq = np.fft.fft2(gauss_kern_padded)
+
+    # invert the kernel
+    inverse_gauss_kern = np.where(gauss_kern_freq==0,0,1/gauss_kern_freq)[:,:,None]
     
-    image_inverse_freq = image_freq # TODO: Exercise 8b)
+    # apply it to image in frequency domain
+    image_inverse_freq = image_freq * inverse_gauss_kern
     
     image_inverse = np.fft.ifft2(image_inverse_freq, axes=(0,1)) 
-    return image_inverse.real
+    return np.roll(image_inverse.real,w,(0,1))
     
 def unsharp_masking(image, alpha=0.5, w=5, sigma=2.2):
     """Performs sharpening with unsharp masking on a given image.
@@ -62,7 +71,9 @@ def unsharp_masking(image, alpha=0.5, w=5, sigma=2.2):
         A numpy array of the shape (h,w,3) representing the sharpened image.
     """
     image_blurred = gauss_filter_freq(image, w, sigma)
-    image_sharp = image # TODO: Exercise 8c)
+
+    image_sharp = image + alpha*(image - image_blurred)
+
     return image_sharp
 # Your solution ends here.
 
